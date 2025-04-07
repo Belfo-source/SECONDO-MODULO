@@ -1,0 +1,24 @@
+import random
+import string
+
+def simple_pwd():
+    chars = string.ascii_letters + string.digits  # Lettere maiuscole, minuscole e numeri
+    pwd = ''.join(random.choices(chars, k=8))     # Password di 8 caratteri
+    print("✅ Password semplice generata:", pwd)
+
+def hard_pwd():
+    chars = ''.join([chr(i) for i in range(33, 127)])  # Tutti i caratteri ASCII stampabili
+    pwd = ''.join(random.choices(chars, k=20))         # Password di 20 caratteri
+    print("🔐 Password complessa generata:", pwd)
+
+while True:
+    scelta = input("Scegli tipo di password:\n(1) Semplice\n(2) Complessa\n>>> ")
+
+    if scelta == "1":
+        simple_pwd()
+        break
+    elif scelta == "2":
+        hard_pwd()
+        break
+    else:
+        print("⚠️ Scelta non valida. Riprova inserendo 1 o 2.\n")
